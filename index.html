@@ -4,6 +4,13 @@
   <meta charset="UTF-8">
   <title>Ping Pong Clásico</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+  <!-- 🔥 Configuración PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#000000">
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/2010/2010482.png" type="image/png">
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2010/2010482.png">
+
   <style>
     body {
       background: #222;
@@ -56,16 +63,7 @@
       margin: 10px;
     }
   </style>
-  <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#000000">
 </head>
-<script>
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./sw.js")
-      .then(() => console.log("✅ Service Worker registrado"))
-      .catch(err => console.error("❌ Error en SW:", err));
-  }
-</script>
 <body>
   <h1>🏓 Ping Pong Clásico</h1>
   <div id="controls">
@@ -87,6 +85,7 @@
     <div id="score"></div>
   </div>
 
+  <!-- 🎮 Script del juego -->
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
@@ -250,5 +249,16 @@
       playerY = touchY - paddleHeight / 2;
     }, { passive: false });
   </script>
+
+  <!-- ✅ Registro del Service Worker (al final del body) -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./sw.js")
+        .then(() => console.log("✅ Service Worker registrado"))
+        .catch(err => console.error("❌ Error en SW:", err));
+    }
+  </script>
 </body>
 </html>
+
+
