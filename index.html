@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Ping Pong Clásico</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <style>
+    body {
+      background: #222;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+
+    #gameContainer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 10px;
+      width: 100%;
+    }
+
+    canvas {
+      background: black;
+      border: 3px solid white;
+      max-width: 100%;
+      height: auto;
+      touch-action: none; /* evitar scroll al jugar */
+    }
+
+    #controls {
+      margin: 10px;
+    }
+
+    select, input, button {
+      padding: 5px 10px;
+      margin: 5px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: none;
+    }
+
+    button {
+      background: #0f0;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0c0;
+    }
+
+    #score {
+      font-size: 20px;
+      margin: 10px;
+    }
+  </style>
+  <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#000000">
+</head>
+<script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./sw.js")
+      .then(() => console.log("✅ Service Worker registrado"))
+      .catch(err => console.error("❌ Error en SW:", err));
+  }
+</script>
+<body>
+  <h1>🏓 Ping Pong Clásico</h1>
+  <div id="controls">
+    <label>Dificultad:</label>
+    <select id="difficulty">
+      <option value="easy">Fácil</option>
+      <option value="medium">Medio</option>
+      <option value="hard">Difícil</option>
+    </select>
+
+    <label>Puntos por ronda:</label>
+    <input type="number" id="pointsLimit" value="5" min="1" max="20">
+
+    <button onclick="startGame()">Iniciar Juego</button>
+  </div>
+
+  <div id="gameContainer">
+    <canvas id="gameCanvas"></canvas>
+    <div id="score"></div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    let W, H;
+    function resizeCanvas() {
+      W = window.innerWidth * 0.9;
+      H = window.innerHeight * 0.6;
+      canvas.width = W;
+      canvas.height = H;
+    }
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
+
+    let paddleHeight, paddleWidth;
+    let playerY, computerY;
+
+    let ballSize, ballX, ballY, ballSpeedX, ballSpeedY;
+
+    let playerScore = 0, computerScore = 0;
+    let winningScore = 5;
+    let gameRunning = false;
+
+    let computerSpeed = 3;
+
+    function resetSizes() {
+      paddleHeight = H * 0.2;
+      paddleWidth = W * 0.015;
+      ballSize = W * 0.015;
+
+      playerY = H / 2 - paddleHeight / 2;
+      computerY = H / 2 - paddleHeight / 2;
+    }
+
+    function startGame() {
+      const difficulty = document.getElementById("difficulty").value;
+      winningScore = parseInt(document.getElementById("pointsLimit").value);
+
+      if (difficulty === "easy") computerSpeed = 2;
+      if (difficulty === "medium") computerSpeed = 4;
+      if (difficulty === "hard") computerSpeed = 7;
+
+      playerScore = 0;
+      computerScore = 0;
+      resetSizes();
+      resetBall();
+      gameRunning = true;
+      gameLoop();
+    }
+
+    function resetBall() {
+      ballX = W / 2;
+      ballY = H / 2;
+      ballSpeedX = Math.random() > 0.5 ? W * 0.01 : -W * 0.01;
+      ballSpeedY = (Math.random() * H * 0.01 - H * 0.005);
+    }
+
+    function drawRect(x, y, w, h, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, w, h);
+    }
+
+    function drawCircle(x, y, r, color) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2, true);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function moveEverything() {
+      if (!gameRunning) return;
+
+      ballX += ballSpeedX;
+      ballY += ballSpeedY;
+
+      if (ballY < 0 || ballY > H) {
+        ballSpeedY = -ballSpeedY;
+      }
+
+      // IA movimiento
+      if (computerY + paddleHeight / 2 < ballY) {
+        computerY += computerSpeed;
+      } else {
+        computerY -= computerSpeed;
+      }
+
+      // Rebote jugador
+      if (ballX < paddleWidth &&
+          ballY > playerY &&
+          ballY < playerY + paddleHeight) {
+        ballSpeedX = -ballSpeedX;
+        let deltaY = ballY - (playerY + paddleHeight / 2);
+        ballSpeedY = deltaY * 0.35;
+      }
+
+      // Rebote computadora
+      if (ballX > W - paddleWidth &&
+          ballY > computerY &&
+          ballY < computerY + paddleHeight) {
+        ballSpeedX = -ballSpeedX;
+        let deltaY = ballY - (computerY + paddleHeight / 2);
+        ballSpeedY = deltaY * 0.35;
+      }
+
+      // Punto computadora
+      if (ballX < 0) {
+        computerScore++;
+        checkWinner();
+        resetBall();
+      }
+
+      // Punto jugador
+      if (ballX > W) {
+        playerScore++;
+        checkWinner();
+        resetBall();
+      }
+    }
+
+    function checkWinner() {
+      if (playerScore >= winningScore) {
+        alert("¡Ganaste la ronda! 🎉");
+        gameRunning = false;
+      } else if (computerScore >= winningScore) {
+        alert("La computadora ganó la ronda 😢");
+        gameRunning = false;
+      }
+    }
+
+    function drawEverything() {
+      drawRect(0, 0, W, H, "black");
+
+      drawRect(0, playerY, paddleWidth, paddleHeight, "white");
+      drawRect(W - paddleWidth, computerY, paddleWidth, paddleHeight, "white");
+
+      drawCircle(ballX, ballY, ballSize, "white");
+
+      document.getElementById("score").textContent =
+        `Jugador: ${playerScore} | Computadora: ${computerScore}`;
+    }
+
+    function gameLoop() {
+      if (!gameRunning) return;
+      moveEverything();
+      drawEverything();
+      requestAnimationFrame(gameLoop);
+    }
+
+    // Control con mouse
+    canvas.addEventListener("mousemove", (evt) => {
+      const rect = canvas.getBoundingClientRect();
+      let mouseY = evt.clientY - rect.top;
+      playerY = mouseY - paddleHeight / 2;
+    });
+
+    // Control con touch
+    canvas.addEventListener("touchmove", (evt) => {
+      evt.preventDefault();
+      let touchY = evt.touches[0].clientY - canvas.getBoundingClientRect().top;
+      playerY = touchY - paddleHeight / 2;
+    }, { passive: false });
+  </script>
+</body>
+</html>
