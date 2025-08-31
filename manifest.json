@@ -1,0 +1,17 @@
+{
+  "name": "Ping Pong Clásico",
+  "short_name": "PingPong",
+  "description": "Juego clásico de ping pong hecho en HTML5 Canvas",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2010/2010482.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
